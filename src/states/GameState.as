@@ -1,6 +1,7 @@
 package states 
 {
 	import flash.geom.Point;
+	import flash.text.engine.FontPosture;
 	import mx.core.FlexSprite;
 	import org.flixel.FlxG;
 	import org.flixel.FlxGroup;
@@ -13,23 +14,24 @@ package states
 
 		private var largescene:FlxSprite;
 		
-	
+		private const INTRO:int = -1;
+		private const OUTRO:int = -1;
 		private const I_JOURNAL:int = 0;
 		private const I_KEYS:int = 1;
 		private const I_PHONE:int = 2;
 		private const I_WATCH:int = 3;
 		
-		private var item_1:FlxSprite = new FlxSprite(100, 100,Assets.journal);
-		private var item_2:FlxSprite = new FlxSprite(200, 200,Assets.keys);
-		private var item_3:FlxSprite = new FlxSprite(300, 300,Assets.phone);
-		private var item_4:FlxSprite = new FlxSprite(400, 400, Assets.watch);
+		private var item_1:FlxSprite = new FlxSprite(2110, 680,Assets.journal);
+		private var item_2:FlxSprite = new FlxSprite(3742, 190,Assets.keys);
+		private var item_3:FlxSprite = new FlxSprite(110, 930,Assets.phone);
+		private var item_4:FlxSprite = new FlxSprite(3028, 3160, Assets.watch);
 		
 		
 		// Places to drop items
-		private var target_journal:FlxSprite = new FlxSprite(100, 200,Assets.journalhole);
-		private var target_keys:FlxSprite = new FlxSprite(200, 300,Assets.keyhole);
-		private var target_phone:FlxSprite = new FlxSprite(300, 400,Assets.phonehole);
-		private var target_watch:FlxSprite = new FlxSprite(400, 500, Assets.watchhole);
+		private var target_journal:FlxSprite = new FlxSprite(3908, 2724,Assets.journalhole);
+		private var target_keys:FlxSprite = new FlxSprite(1862, 2772,Assets.keyhole);
+		private var target_phone:FlxSprite = new FlxSprite(3168, 950,Assets.phonehole);
+		private var target_watch:FlxSprite = new FlxSprite(490, 500, Assets.watchhole);
 		
 		private var on_world_group:FlxGroup = new FlxGroup();
 		private var on_inventory_group:FlxGroup = new FlxGroup();
@@ -42,17 +44,22 @@ package states
 		private var sticky_item:FlxSprite;
 		private var sticky_item_idx:int = 0;
 		
+		// The dialogue/intro/outro popups
+		private var popup:FlxSprite;
+		
 		private var state:int = 0;
 		private const s_moving:int = 0; // Player moving about
 		private const s_dropping:int = 1; // Dropping something
 		private const s_dialogue:int = 2;
+		private const s_end:int = 3;
+		private const s_intro:int = 4;
 		
 		private var just_placed_idx:int = -1;
 		
 		private var inventory_positions:Array; // Where items should go when picked up 
 		private var picked_up_positions:Array; // Where items were picked up/dropped
 		
-		private const SCROLL_SPEED:int = 300;
+		private const SCROLL_SPEED:int = 800;
 		
 		private var INVENTORY_HEIGHT:int;
 		
@@ -94,6 +101,13 @@ package states
 			
 			add(on_inventory_group);
 			
+			// Load intro graphic.
+			popup = new FlxSprite(0, 0);
+			popup.makeGraphic(500, 500, 0xff123123);
+			popup.scrollFactor.x = popup.scrollFactor.y = 0;
+			popup.visible = true;
+			add(popup);
+			
 			mouse_sentinel = new FlxObject(0, 0, 16, 16);
 			mouse_sentinel.scrollFactor.x = mouse_sentinel.scrollFactor.y = 0;
 			
@@ -103,6 +117,8 @@ package states
 				picked_up_positions.push(new Point(0, 0));
 			}
 			
+			
+			state = s_intro;
 			
 			
 			FlxG.camera.setBounds(0, 0, 4286, 3297, true);
@@ -123,6 +139,13 @@ package states
 				moving_state();
 			} else if (state == s_dialogue) {
 				dialogue_state();
+			} else if (state == s_intro) {
+				if (FlxG.mouse.justPressed()) {
+					popup.visible = false;
+					state = s_moving;
+				}
+			} else if (state == s_end) {
+				
 			}
 			super.update();
 		}
@@ -136,12 +159,48 @@ package states
 			
 		}
 		
+		/**
+		 * Loads the dialogue image and sets it to visible, switches to dialogue state.
+		 * @param	type	enum for the type of image
+		 * @param	is_set  is this the popup for setting an item correclty
+		 */
+		private function load_popup(type:int, is_set:Boolean = false):void {
+			
+			var graphic:Class;
+			
+			switch (type) {
+				case OUTRO:
+					break;
+				case INTRO:
+					break;
+				case I_JOURNAL:
+					break;
+				case I_KEYS:
+					break;
+				case I_PHONE:
+					break;
+				case I_WATCH:
+					break;
+			}
+			
+			popup.makeGraphic(500, 500, 0xff999999);
+			popup.visible = true;
+			
+		}
+		
 		private function dialogue_state():void {
 			// check and reset index
-			just_placed_idx = -1;
-			state = s_moving;
-			// pop up the right text
-			// wait for mouse input
+			mouse_sentinel.x = FlxG.mouse.screenX - 4;
+			mouse_sentinel.y = FlxG.mouse.screenY - 4;
+			
+			if (FlxG.mouse.justPressed()) {
+				if (mouse_sentinel.overlaps(popup, true)) { 
+					popup.visible = false;
+					
+					just_placed_idx = -1;
+					state = s_moving;
+				}
+			}
 		}
 		private function moving_state():void 
 		{
@@ -209,6 +268,22 @@ package states
 				try_grab_item(item_3, 2);
 				try_grab_item(item_4, 3);
 			}
+			
+			// Check for win condition
+			
+			var i:int = 0;
+			while (i < 4) {
+				if (!R.item_placed_list[i]) {
+					break;
+				}
+				
+				if (i == 3) {
+					load_popup(OUTRO);
+					player.velocity.x = player.velocity.y = 0;
+					state = s_end;
+				}
+				i++;
+			}
 		}
 		
 		/**
@@ -249,6 +324,14 @@ package states
 			item.y = inventory_positions[index].y;
 			item.scrollFactor.x = 0;
 			item.scrollFactor.y = 0;
+			
+			if (!R.got_item_at_least_once[index]) {
+				load_popup(index, false);
+				R.got_item_at_least_once[index] = true;
+				
+				player.velocity.x = player.velocity.y = 0;
+				state = s_dialogue;
+			}
 		}
 		
 		private function dropping_state():void {
@@ -272,24 +355,28 @@ package states
 						if (sticky_item.overlaps(target_journal)) {
 							R.item_placed_list[I_JOURNAL] = true;
 							just_placed_idx = I_JOURNAL;
+							load_popup(I_JOURNAL, true);
 						}
 						break;
 					case I_WATCH:
 						if (sticky_item.overlaps(target_watch)) {
 							R.item_placed_list[I_WATCH] = true;
 							just_placed_idx = I_WATCH;
+							load_popup(I_WATCH, true);
 						}
 						break;
 					case I_PHONE:
 						if (sticky_item.overlaps(target_phone)) {
 							R.item_placed_list[I_PHONE] = true;
 							just_placed_idx = I_PHONE;
+							load_popup(I_PHONE, true);
 						}
 						break;
 					case I_KEYS:
 						if (sticky_item.overlaps(target_keys)) {
 							R.item_placed_list[I_KEYS] = true;
 							just_placed_idx = I_KEYS;
+							load_popup(I_KEYS, true);
 						}
 						break;
 				}

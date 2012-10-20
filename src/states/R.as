@@ -17,7 +17,7 @@ package states
 		 */
 		public static var item_placed_list:Array = new Array(false, false, false, false);
 		
-		
+		public static var got_item_at_least_once:Array = new Array(false, false, false, false);
 		
 	}
 
