@@ -17,6 +17,15 @@ package
 		[Embed(source = "../res/items/watch.png")] public static const watch:Class;
 		[Embed(source = "../res/items/watchhole.png")] public static const watchhole:Class;
 		
+		[Embed(source = "../res/intro.png")] public static const popup_intro:Class;
+		[Embed(source = "../res/journalfind.png")] public static const popup_fjournal:Class;
+		[Embed(source = "../res/journalplace.png")] public static const popup_pjournal:Class;
+		[Embed(source = "../res/keyfind.png")] public static const popup_fkeys:Class;
+		[Embed(source = "../res/keyplace.png")] public static const popup_pkeys:Class;
+		[Embed(source = "../res/phonefind.png")] public static const popup_fphone:Class;
+		[Embed(source = "../res/phoneplace.png")] public static const popup_pphone:Class;
+		[Embed(source = "../res/watchfind.png")] public static const popup_fwatch:Class;
+		[Embed(source="../res/watchplace.png")] public static const popup_pwatch:Class;
 		
 	}
 

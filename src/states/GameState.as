@@ -8,6 +8,7 @@ package states
 	import org.flixel.FlxObject;
 	import org.flixel.FlxSprite;
 	import org.flixel.FlxState;
+	import org.flixel.FlxU;
 	
 	public class GameState extends FlxState 
 	{
@@ -94,6 +95,7 @@ package states
      
 			player = new FlxSprite(400, 400);
 			player.makeGraphic(16, 16, 0xff123123);
+			player.visible = false;
 			add(player);
 			
 			
@@ -102,8 +104,8 @@ package states
 			add(on_inventory_group);
 			
 			// Load intro graphic.
-			popup = new FlxSprite(0, 0);
-			popup.makeGraphic(500, 500, 0xff123123);
+			popup = new FlxSprite( -140, 0);
+			popup.loadGraphic(Assets.popup_intro);
 			popup.scrollFactor.x = popup.scrollFactor.y = 0;
 			popup.visible = true;
 			add(popup);
@@ -141,7 +143,14 @@ package states
 				dialogue_state();
 			} else if (state == s_intro) {
 				if (FlxG.mouse.justPressed()) {
+					popup.alpha -= 0.02;
+				}
+				if (popup.alpha < 1) {
+					popup.alpha -= 0.02;
+				}
+				if (popup.alpha <= 0) {
 					popup.visible = false;
+					popup.alpha = 1;
 					state = s_moving;
 				}
 			} else if (state == s_end) {
@@ -166,28 +175,29 @@ package states
 		 */
 		private function load_popup(type:int, is_set:Boolean = false):void {
 			
-			var graphic:Class;
-			
 			switch (type) {
 				case OUTRO:
-					break;
-				case INTRO:
+					popup.makeGraphic(200, 200, 0xffff0000);
 					break;
 				case I_JOURNAL:
+					is_set ? popup.loadGraphic(Assets.popup_pjournal) : popup.loadGraphic(Assets.popup_fjournal);
 					break;
 				case I_KEYS:
+					is_set ? popup.loadGraphic(Assets.popup_pkeys) : popup.loadGraphic(Assets.popup_fkeys);
 					break;
 				case I_PHONE:
+					is_set ? popup.loadGraphic(Assets.popup_pphone) : popup.loadGraphic(Assets.popup_fphone);
 					break;
 				case I_WATCH:
+					is_set ? popup.loadGraphic(Assets.popup_pwatch) : popup.loadGraphic(Assets.popup_fwatch);
 					break;
 			}
 			
-			popup.makeGraphic(500, 500, 0xff999999);
 			popup.visible = true;
 			
 		}
 		
+		private var leave_dialogue:Boolean = false;
 		private function dialogue_state():void {
 			// check and reset index
 			mouse_sentinel.x = FlxG.mouse.screenX - 4;
@@ -195,9 +205,17 @@ package states
 			
 			if (FlxG.mouse.justPressed()) {
 				if (mouse_sentinel.overlaps(popup, true)) { 
-					popup.visible = false;
-					
 					just_placed_idx = -1;
+					leave_dialogue = true;
+				}
+			}
+			
+			if (leave_dialogue) {
+				popup.alpha -= 0.03;
+				if (popup.alpha <= 0) {
+					leave_dialogue = false;
+					popup.alpha = 1;
+					popup.visible = false;
 					state = s_moving;
 				}
 			}
@@ -244,7 +262,10 @@ package states
 			
 			// Check to send things to inventory, only if we don't have them, we touch them, and we haven't correclty placed them
 			
-			if (!R.inventory[0] && !R.item_placed_list[0] && player.overlaps(item_1)) {
+		//	if (!R.inventory[0] && !R.item_placed_list[0] && player.overlaps(item_1)) {
+		
+		
+		/*	if (!R.inventory[0] && !R.item_placed_list[0] && mouse_sentinel.overlaps(item_1)) {
 				send_item_to_inventory(item_1, 0);
 			}
 			if (!R.inventory[1] && !R.item_placed_list[1] && player.overlaps(item_2)) {
@@ -255,7 +276,7 @@ package states
 			}
 			if (!R.inventory[3] && !R.item_placed_list[3] && player.overlaps(item_4)) {
 				send_item_to_inventory(item_4, 3);
-			}
+			}*/
 			
 			// Mouse logic
 			
@@ -263,6 +284,25 @@ package states
 				mouse_sentinel.x = FlxG.mouse.screenX - 8;
 				mouse_sentinel.y = FlxG.mouse.screenY - 8;
 				
+				// Try to pick up items from ground
+				if (!R.inventory[0] && !R.item_placed_list[0] && mouse_sentinel.overlaps(item_1,true)) {
+					send_item_to_inventory(item_1, 0);
+					return;
+				}
+				if (!R.inventory[1] && !R.item_placed_list[1] && mouse_sentinel.overlaps(item_2,true)) {
+					send_item_to_inventory(item_2, 1);
+					return;
+				}
+				if (!R.inventory[2] && !R.item_placed_list[2] && mouse_sentinel.overlaps(item_3,true)) {
+					send_item_to_inventory(item_3, 2);
+					return;
+				}
+				if (!R.inventory[3] && !R.item_placed_list[3] && mouse_sentinel.overlaps(item_4,true)) {
+					send_item_to_inventory(item_4, 3);
+					return;
+				}
+				
+				// Try to pick up items from inventory
 				try_grab_item(item_1, 0);
 				try_grab_item(item_2, 1);
 				try_grab_item(item_3, 2);
@@ -279,8 +319,10 @@ package states
 				
 				if (i == 3) {
 					load_popup(OUTRO);
+					popup.visible = false;
 					player.velocity.x = player.velocity.y = 0;
 					state = s_end;
+					FlxU.openURL("http://lucidity.com/100.html");
 				}
 				i++;
 			}
@@ -356,6 +398,7 @@ package states
 							R.item_placed_list[I_JOURNAL] = true;
 							just_placed_idx = I_JOURNAL;
 							load_popup(I_JOURNAL, true);
+							state = s_dialogue;
 						}
 						break;
 					case I_WATCH:
@@ -363,6 +406,7 @@ package states
 							R.item_placed_list[I_WATCH] = true;
 							just_placed_idx = I_WATCH;
 							load_popup(I_WATCH, true);
+							state = s_dialogue;
 						}
 						break;
 					case I_PHONE:
@@ -370,6 +414,7 @@ package states
 							R.item_placed_list[I_PHONE] = true;
 							just_placed_idx = I_PHONE;
 							load_popup(I_PHONE, true);
+							state = s_dialogue;
 						}
 						break;
 					case I_KEYS:
@@ -377,6 +422,7 @@ package states
 							R.item_placed_list[I_KEYS] = true;
 							just_placed_idx = I_KEYS;
 							load_popup(I_KEYS, true);
+							state = s_dialogue;
 						}
 						break;
 				}
