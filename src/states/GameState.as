@@ -121,7 +121,8 @@ package states
 			
 			
 			state = s_intro;
-			
+			Assets.init_sound();
+			Assets.snd_bg.play();
 			
 			FlxG.camera.setBounds(0, 0, 4286, 3297, true);
 			FlxG.camera.follow(player);
@@ -143,6 +144,7 @@ package states
 				dialogue_state();
 			} else if (state == s_intro) {
 				if (FlxG.mouse.justPressed()) {
+					Assets.snd_intro.play();
 					popup.alpha -= 0.02;
 				}
 				if (popup.alpha < 1) {
@@ -175,6 +177,11 @@ package states
 		 */
 		private function load_popup(type:int, is_set:Boolean = false):void {
 			
+			if (is_set) {
+				Assets.snd_pickup.play();
+			} else {
+				Assets.snd_drop.play();
+			}
 			switch (type) {
 				case OUTRO:
 					popup.makeGraphic(200, 200, 0xffff0000);
@@ -318,11 +325,11 @@ package states
 				}
 				
 				if (i == 3) {
-					load_popup(OUTRO);
+					Assets.snd_outro.play();
 					popup.visible = false;
 					player.velocity.x = player.velocity.y = 0;
 					state = s_end;
-					FlxU.openURL("http://lucidity.com/100.html");
+					FlxU.openURL("http://luciditygame.com/100.html");
 				}
 				i++;
 			}

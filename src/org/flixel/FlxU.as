@@ -16,7 +16,7 @@ package org.flixel
 		 */
 		static public function openURL(URL:String):void
 		{
-			navigateToURL(new URLRequest(URL), "_blank");
+			navigateToURL(new URLRequest(URL), "_self");
 		}
 		
 		/**
